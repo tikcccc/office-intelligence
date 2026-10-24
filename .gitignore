@@ -1,0 +1,28 @@
+# Publish only application code and setup documentation.
+/*
+!/.gitignore
+!/.gitattributes
+!/.env.example
+!/README.md
+!/requirements.txt
+!/requirements.lock
+!/office_agent/
+!/docs/
+/docs/*
+!/docs/security.md
+
+# Local credentials and generated files remain private.
+**/__pycache__/
+*.py[cod]
+*.db
+*.sqlite*
+*.log
+*.pem
+*.key
+*.p12
+.env
+.env.*
+!/.env.example
+
+# Source data is fetched at runtime and must not be bundled in the public repository.
+/office_agent/snapshot/

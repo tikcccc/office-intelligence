@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="London office market intelligence: broker research, macro signals and source-backed market briefs."
+    />
+    <title>Office Intelligence · London Office Market Monitor</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Office Intelligence home"
+        ><span class="brand-symbol">o<span>i</span></span
+        ><span>OFFICE<br /><b>INTELLIGENCE</b></span></a
+      >
+      <div class="workspace-label">LONDON RESEARCH WORKSPACE</div>
+      <nav class="navigation" aria-label="Main navigation">
+        <a
+          href="#overview"
+          class="nav-link active"
+          data-view="overview"
+          aria-current="page"
+          ><span data-icon="grid"></span
+          ><span>Overview<small>Market pulse</small></span></a
+        >
+        <a href="#ask" class="nav-link" data-view="ask"
+          ><span data-icon="chat"></span
+          ><span>Ask the market<small>Questions &amp; evidence</small></span></a
+        >
+        <a href="#metrics" class="nav-link" data-view="metrics"
+          ><span data-icon="chart"></span
+          ><span>Market evidence<small>Broker comparisons</small></span></a
+        >
+        <a href="#brief" class="nav-link" data-view="brief"
+          ><span data-icon="document"></span
+          ><span>Weekly brief<small>Research &amp; insights</small></span></a
+        >
+      </nav>
+      <div class="sidebar-note">
+        <span class="small-rule"></span>
+        <p>Clarity starts<br />with evidence.</p>
+        <span>Built around evidence.</span>
+      </div>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span> London office market<span
+          class="version"
+          >LONDON / RESEARCH</span
+        >
+      </div>
+    </aside>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="breadcrumb">
+          Research workspace <span>/</span>
+          <strong id="page-name">Overview</strong>
+        </div>
+        <div class="topbar-actions">
+          <span id="today" class="today"></span
+          ><span class="mode-control live-mode"
+            ><span class="status-dot"></span> Live market workspace</span
+          ><button
+            id="refresh-data"
+            class="icon-button"
+            title="Refresh data"
+            aria-label="Refresh data"
+          >
+            <span data-icon="refresh"></span>
+          </button>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div id="global-error" class="notice error hidden" role="alert">
+          <span id="error-message"></span
+          ><button id="retry-data" class="text-button">Retry</button>
+        </div>
+        <div class="data-strip">
+          <span class="pill" id="data-badge"
+            ><span class="status-dot"></span> Live sources</span
+          ><span id="data-note">Connecting to the research workspace…</span
+          ><button class="text-button" id="all-sources">
+            Source register <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+
+        <section
+          id="view-overview"
+          class="view"
+          aria-labelledby="overview-title"
+        >
+          <section class="panel live-console" aria-labelledby="live-title">
+            <div class="live-console-heading">
+              <div>
+                <span class="eyebrow">LIVE RESEARCH PIPELINE</span>
+                <h2 id="live-title">Fresh evidence. A clearer market view.</h2>
+                <p>
+                  Get current source data, extract broker readings and run AI
+                  analysis in one place.
+                </p>
+              </div>
+              <div class="live-actions">
+                <button class="button primary" id="refresh-market">
+                  <span data-icon="refresh"></span
+                  ><span id="refresh-market-label"
+                    >Get latest data &amp; run AI</span
+                  ></button
+                ><button class="button ghost" id="run-analysis">
+                  <span data-icon="spark"></span>Run AI analysis
+                </button>
+              </div>
+            </div>
+            <p id="pipeline-capability" class="small muted">
+              Connecting to the live research service…
+            </p>
+            <div class="activity-metadata">
+              <div>
+                <span>Last data retrieval</span
+                ><strong id="last-data-time">Not yet retrieved</strong>
+              </div>
+              <div>
+                <span>Last AI analysis</span
+                ><strong id="last-ai-time">Not yet run</strong>
+              </div>
+              <div>
+                <span>Latest run</span
+                ><strong id="last-run-state">Ready</strong>
+              </div>
+            </div>
+            <div
+              id="pipeline-progress"
+              class="pipeline-progress hidden"
+              role="status"
+            >
+              <div class="pipeline-status">
+                <span class="spinner"></span
+                ><strong id="pipeline-label">Starting live update</strong
+                ><span id="pipeline-elapsed">0s elapsed</span
+                ><button class="text-button" id="cancel-pipeline">
+                  Cancel
+                </button>
+              </div>
+              <div class="pipeline-track" aria-hidden="true"></div>
+            </div>
+            <ol id="pipeline-steps" class="pipeline-steps"></ol>
+            <div
+              id="pipeline-error"
+              class="notice error hidden"
+              role="alert"
+            ></div>
+            <details class="run-history">
+              <summary>
+                Recent activity <span id="history-count">0 runs</span>
+              </summary>
+              <div id="run-history-list"></div>
+            </details>
+          </section>
+          <section
+            class="panel home-analysis"
+            aria-labelledby="home-analysis-title"
+          >
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow">LATEST AI PERSPECTIVE</span>
+                <h2 id="home-analysis-title">
+                  What the evidence is telling us
+                </h2>
+              </div>
+              <span id="analysis-data-time" class="small muted"></span>
+            </div>
+            <div id="home-analysis-content" class="empty-state compact">
+              AI analysis will appear here after live data has been retrieved.
+            </div>
+            <div id="home-analysis-quality" class="quality-box hidden"></div>
+          </section>
+          <div class="hero">
+            <div class="hero-copy">
+              <div class="eyebrow">
+                <span></span> LONDON OFFICE MARKET MONITOR
+              </div>
+              <h1 id="overview-title">
+                Read the market.<br />Know your next move<span
+                  class="accent-period"
+                  >.</span
+                >
+              </h1>
+              <p>
+                Broker research, macro signals and market news.<br
+                  class="desktop-break"
+                />
+                One workspace for better-informed conversations.
+              </p>
+              <div class="hero-actions">
+                <a class="button primary" href="#ask"
+                  ><span data-icon="spark"></span> Ask the market
+                  <span aria-hidden="true">↗</span></a
+                ><a class="button ghost" href="#metrics"
+                  >Explore the evidence <span aria-hidden="true">→</span></a
+                >
+              </div>
+              <div class="hero-tags">
+                <span>Independent broker views</span
+                ><span>Traceable sources</span
+                ><span>Uncertainty made visible</span>
+              </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <span class="art-label">LONDON<br /><b>IN PERSPECTIVE.</b></span
+              ><svg viewBox="0 0 350 240" fill="none">
+                <path
+                  d="M5 217H345M18 194V160H46V194M32 160V139M56 217V117H96V217M62 117L76 91L90 117M76 91V68M102 217V72L145 31V217M113 82V196M126 69V196M139 56V196M153 217V114H187V217M160 126H180M160 140H180M160 154H180M160 168H180M199 217V83L225 47L250 83V217M212 96V201M226 84V201M239 96V201M262 217V130H299V217M270 144H291M270 158H291M270 172H291M309 217V165H332V217"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M1 231C50 211 90 249 139 231C190 213 228 246 278 231C300 224 321 226 350 233"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                /></svg
+              ><span class="art-foot">THE CITY · WEST END · BEYOND</span>
+            </div>
+          </div>
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">MARKET AT A GLANCE</span>
+              <h2>Four readings to set the scene</h2>
+            </div>
+            <span class="muted small"
+              >A named source and period for every reading</span
+            >
+          </div>
+          <div id="kpi-grid" class="kpi-grid loading" aria-live="polite">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+          <div class="overview-grid">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">A COMPARABLE VIEW</span>
+                  <h2>One period. Different perspectives.</h2>
+                </div>
+                <a href="#metrics" class="text-button">Compare all ↗</a>
+              </div>
+              <div class="chart-context" id="mini-chart-context">
+                Central London · Vacancy rate
+              </div>
+              <div id="mini-chart" class="bar-chart skeleton-block"></div>
+              <p class="footnote">
+                Broker definitions can differ even within the same period.
+                Readings are shown independently, never averaged.
+              </p>
+            </article>
+            <article class="panel news-panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">IN THE MARKET</span>
+                  <h2>Stories shaping the market</h2>
+                </div>
+                <span class="tiny-tag" id="news-count">—</span>
+              </div>
+              <div id="news-list" class="news-list skeleton-block"></div>
+              <button id="more-news" class="more-button">
+                More market stories <span>↓</span>
+              </button>
+              <p class="footnote">
+                Headlines only. Read the original reporting for transaction
+                details.
+              </p>
+            </article>
+          </div>
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">THE MACRO BACKDROP</span>
+              <h2>The bigger economic picture</h2>
+            </div>
+            <span class="muted small"
+              >Current readings and change from the prior observation</span
+            >
+          </div>
+          <div id="macro-grid" class="macro-grid"></div>
+          <section class="brief-callout">
+            <div class="callout-icon" data-icon="document"></div>
+            <div>
+              <span class="eyebrow">FROM EVIDENCE TO A BRIEF</span>
+              <h2>Bring the evidence to your next conversation.</h2>
+              <p>
+                Market readings, broker differences and macro context, with a
+                full source register.
+              </p>
+            </div>
+            <a class="button dark" href="#brief"
+              >Create a brief <span>↗</span></a
+            >
+          </section>
+        </section>
+
+        <section id="view-ask" class="view hidden" aria-labelledby="ask-title">
+          <div class="page-intro">
+            <span class="eyebrow">ASK THE MARKET</span>
+            <h1 id="ask-title">Start with a better question.</h1>
+            <p>
+              Explore submarket differences, broker perspectives and macro
+              shifts. Keep the answer close to the evidence.
+            </p>
+          </div>
+          <div class="research-layout">
+            <article class="panel chat-panel">
+              <div class="panel-heading">
+                <h2>Ask the market</h2>
+                <button id="reset-chat" class="text-button">
+                  New conversation
+                </button>
+              </div>
+              <div id="chat-log" class="chat-log" aria-live="polite">
+                <div class="chat-welcome">
+                  <span class="welcome-mark" data-icon="spark"></span>
+                  <h3>What would you like to explore?</h3>
+                  <p>
+                    Start with a submarket or a specific metric.<br />Then
+                    follow the evidence.
+                  </p>
+                  <div id="question-suggestions" class="suggestion-list">
+                    <button data-question="What is the City vacancy rate?">
+                      What is the City vacancy rate? <span>↗</span></button
+                    ><button
+                      data-question="Why do brokers disagree on Central London vacancy?"
+                    >
+                      Why do broker vacancy readings differ?
+                      <span>↗</span></button
+                    ><button data-question="What is the UK Bank Rate?">
+                      What is the UK Bank Rate? <span>↗</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div id="ask-progress" class="job-progress hidden" role="status">
+                <span class="spinner"></span
+                ><span class="progress-label">Preparing your answer</span
+                ><button class="text-button cancel-job" type="button">
+                  Cancel
+                </button>
+              </div>
+              <form id="ask-form" class="ask-form">
+                <label for="question" class="sr-only"
+                  >Your market question</label
+                ><textarea
+                  id="question"
+                  rows="2"
+                  maxlength="8000"
+                  placeholder="How does vacancy in the City compare with the West End?"
+                ></textarea>
+                <div class="composer-footer">
+                  <label class="toggle-label"
+                    ><input id="ask-ai" type="checkbox" disabled /><span
+                      >AI analysis</span
+                    ><span id="ai-hint" class="muted small"
+                      >Source data only</span
+                    ></label
+                  ><button type="submit" class="button primary" id="ask-submit">
+                    Send question <span data-icon="arrow"></span>
+                  </button>
+                </div>
+              </form>
+              <p class="composer-note">
+                AI analysis uses the model configured on the server. Changing
+                the data or analysis mode starts a new conversation context.
+              </p>
+            </article>
+            <aside class="evidence-panel panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">THE EVIDENCE</span>
+                  <h2>Sources & checks</h2>
+                </div>
+                <span data-icon="shield"></span>
+              </div>
+              <div id="answer-quality" class="quality-box">
+                <strong>Evidence belongs beside the answer</strong>
+                <p>
+                  Review the source, period and units before quoting a reading.
+                </p>
+              </div>
+              <div id="answer-sources" class="evidence-list">
+                <div class="empty-state compact">
+                  The sources for your answer will appear here.
+                </div>
+              </div>
+              <p class="footnote">
+                Automated checks support review. Verify flagged claims against
+                the original reports before using them.
+              </p>
+            </aside>
+          </div>
+        </section>
+
+        <section
+          id="view-metrics"
+          class="view hidden"
+          aria-labelledby="metrics-title"
+        >
+          <div class="page-intro">
+            <span class="eyebrow">MARKET EVIDENCE</span>
+            <h1 id="metrics-title">Put the differences in perspective.</h1>
+            <p>
+              Choose a common metric and period, then explore the differences in
+              broker definitions.
+            </p>
+          </div>
+          <div class="panel">
+            <div class="filters">
+              <label>Metric<select id="metric-filter"></select></label
+              ><label>Submarket<select id="market-filter"></select></label
+              ><label
+                >Reporting period<select id="period-filter"></select></label
+              ><button id="reset-filters" class="text-button">
+                Reset filters
+              </button>
+            </div>
+            <div class="comparison-heading">
+              <div>
+                <h2 id="comparison-title">Vacancy rate comparison</h2>
+                <p id="comparison-subtitle" class="muted"></p>
+              </div>
+              <span class="pill quiet">Independent readings · No averages</span>
+            </div>
+            <div id="comparison-chart" class="bar-chart large-chart"></div>
+            <div class="table-scroll">
+              <table class="metrics-table">
+                <thead>
+                  <tr>
+                    <th>Publisher</th>
+                    <th>Reading</th>
+                    <th>Period</th>
+                    <th>Data status</th>
+                    <th>Definition & source</th>
+                  </tr>
+                </thead>
+                <tbody id="metrics-table-body"></tbody>
+              </table>
+            </div>
+            <div id="metrics-empty" class="empty-state hidden">
+              No readings for this combination. Try a different submarket or
+              period.
+            </div>
+            <p class="footnote table-footnote">
+              Only the selected period is charted. Vacancy, availability, Grade
+              A and all-grade figures have different definitions. Open a source
+              to review its scope.
+            </p>
+          </div>
+          <section class="panel changes-panel">
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow">WHAT CHANGED</span>
+                <h2>What changed within each broker’s view?</h2>
+              </div>
+            </div>
+            <div id="changes-list" class="changes-list"></div>
+            <p class="footnote">
+              Changes require a consistent publisher, metric and definition.
+              Year-to-date totals are not directly compared.
+            </p>
+          </section>
+        </section>
+
+        <section
+          id="view-brief"
+          class="view hidden"
+          aria-labelledby="brief-title"
+        >
+          <div class="page-intro">
+            <span class="eyebrow">THE WEEKLY BRIEF</span>
+            <h1 id="brief-title">Turn the evidence into a conversation.</h1>
+            <p>
+              Create a source-backed research brief from this workspace. Preview
+              it here or download it as Markdown.
+            </p>
+          </div>
+          <div class="brief-layout">
+            <aside class="panel brief-controls">
+              <span class="document-icon" data-icon="document"></span>
+              <h2>London Office Market Brief</h2>
+              <p>Key facts for investment, leasing and strategy discussions.</p>
+              <ul class="included-list">
+                <li>Broker readings & differences</li>
+                <li>Macro context & market news</li>
+                <li>Reporting periods & source register</li>
+              </ul>
+              <label class="toggle-label brief-toggle"
+                ><input id="brief-ai" type="checkbox" disabled /><span
+                  >Use AI analysis</span
+                ></label
+              >
+              <p class="small muted" id="brief-mode-note">
+                A factual digest is generated by default, with no model calls.
+              </p>
+              <button id="generate-brief" class="button primary full-width">
+                Generate brief <span data-icon="arrow"></span></button
+              ><a
+                id="download-brief"
+                class="button ghost full-width hidden"
+                download
+                >Download Markdown <span data-icon="download"></span
+              ></a>
+              <div
+                id="brief-progress"
+                class="job-progress hidden"
+                role="status"
+              >
+                <span class="spinner"></span
+                ><span class="progress-label">Gathering the evidence</span
+                ><button class="text-button cancel-job" type="button">
+                  Cancel
+                </button>
+              </div>
+            </aside>
+            <article class="panel brief-paper">
+              <div class="paper-topline">
+                <span>OFFICE INTELLIGENCE / RESEARCH</span
+                ><span id="brief-state-label">Ready when you are</span>
+              </div>
+              <div id="brief-preview" class="brief-preview">
+                <div class="empty-state brief-empty">
+                  <span data-icon="document"></span>
+                  <h2>Your next research brief</h2>
+                  <p>
+                    Generate a brief to review the market evidence<br />and its
+                    sources in one place.
+                  </p>
+                </div>
+              </div>
+              <div id="brief-quality" class="quality-box hidden"></div>
+            </article>
+          </div>
+        </section>
+        <footer class="page-footer">
+          <span
+            >OFFICE INTELLIGENCE <span class="footer-divider">/</span> London
+            office market monitor</span
+          ><span>Clear periods. Traceable evidence.</span>
+        </footer>
+      </main>
+    </div>
+    <div id="source-overlay" class="drawer-overlay hidden"></div>
+    <aside
+      id="source-drawer"
+      class="source-drawer hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="source-title"
+    >
+      <div class="drawer-heading">
+        <div>
+          <span class="eyebrow">BACK TO THE SOURCE</span>
+          <h2 id="source-title">Sources &amp; evidence</h2>
+        </div>
+        <button
+          id="close-source"
+          class="icon-button"
+          aria-label="Close source panel"
+        >
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <div id="source-content" class="drawer-content"></div>
+    </aside>
+    <div id="toast" class="toast hidden" role="status"></div>
+  </body>
+</html>
