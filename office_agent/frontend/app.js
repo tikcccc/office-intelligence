@@ -364,7 +364,7 @@ function bestPeriod(rows) {
     )[0] || ""
   );
 }
-function renderOverview() {
+function renderEvidence() {
   const d = state.data;
   const grid = clear("kpi-grid");
   grid.classList.remove("loading");
@@ -383,23 +383,13 @@ function renderOverview() {
     }
     grid.append(el);
   });
-  const rows = d.rows.filter(
-      (r) => r.metric === "vacancy_rate" && r.submarket === "Central London",
-    ),
-    period = bestPeriod(rows);
-  $("mini-chart-context").textContent =
-    `Central London · Vacancy / availability (all grades) · ${period || "No period"}`;
-  bars(
-    "mini-chart",
-    rows.filter((r) => r.period === period),
-  );
   renderNews();
   const macro = clear("macro-grid");
   if (!d.macro.indicators.length)
     macro.append(
       node(
         "p",
-        "Macro readings are unavailable. Review the live retrieval status above.",
+        "Macro readings are unavailable. Review the update details on the overview.",
         "empty-state whole-grid",
       ),
     );
@@ -603,22 +593,21 @@ async function loadDashboard() {
   hide("global-error");
   try {
     state.data = await api("/api/dashboard");
-    renderOverview();
+    renderEvidence();
     setupFilters();
     renderWorkspace();
     $("data-badge").textContent = state.data.workspace.has_data
       ? "● Retrieved source data"
       : "● Awaiting live data";
     $("data-note").textContent = state.data.retrieved_at
-      ? `Retrieved ${timeLabel(state.data.retrieved_at)}. Reporting periods are shown separately; failed sources are left unavailable.`
-      : "No data has been retrieved yet. The first live update starts automatically.";
+      ? "Live sources · Reporting periods vary by source"
+      : "The first live update starts automatically.";
   } catch (error) {
     $("error-message").textContent = error.message;
     hide("global-error", false);
     throw error;
   }
 }
-$("refresh-data").addEventListener("click", () => runPipeline());
 $("retry-data").addEventListener("click", () => init());
 
 function timeLabel(value) {
@@ -652,27 +641,100 @@ function statusLabel(status) {
     }[status] || status
   );
 }
+function briefingSections(answer) {
+  const sections = { signals: [], meaning: [], watch: [] };
+  const headings = {
+    "key takeaways": "signals",
+    "market signals": "signals",
+    "what it could mean": "meaning",
+    implications: "meaning",
+    "what to watch": "watch",
+    "data gaps": "watch",
+  };
+  let current = null;
+  for (const raw of answer.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const heading = line
+      .replace(/^#{1,6}\s*/, "")
+      .replace(/\*\*/g, "")
+      .replace(/:$/, "")
+      .toLowerCase();
+    if (headings[heading]) {
+      current = headings[heading];
+    } else if (/^#{1,6}\s/.test(line) || heading === "broker perspectives") {
+      current = null;
+    } else if (current) {
+      sections[current].push(line.replace(/^[-*•]\s+|^\d+[.)]\s+/, ""));
+    }
+  }
+  return sections;
+}
+function renderHomeBriefing(analysis) {
+  const signals = clear("home-analysis-content");
+  hide("home-analysis-quality", !analysis);
+  hide("home-review-notice");
+  document
+    .querySelector(".full-analysis")
+    .classList.toggle("hidden", !analysis);
+  if (!analysis) {
+    $("home-analysis-title").textContent = state.data.workspace.has_data
+      ? "Your evidence is ready to explore."
+      : "Your next market view starts here.";
+    signals.append(
+      node(
+        "p",
+        state.data.workspace.has_data
+          ? state.ai
+            ? "Use Get latest data & run AI for a market perspective, or explore the retrieved sources in Market evidence."
+            : "Explore the retrieved sources in Market evidence. Configure an AI provider on the server to add a market perspective."
+          : "Retrieving live sources will bring the key market signals into focus.",
+        "focus-empty",
+      ),
+    );
+    $("home-watch-content").textContent =
+      "Check the reporting period, source coverage and broker definitions before quoting a figure.";
+    return;
+  }
+  const sections = briefingSections(analysis.answer);
+  $("home-analysis-title").textContent =
+    sections.meaning.join(" ").replace(/\*\*/g, "") ||
+    "Your latest market briefing is ready.";
+  sections.signals.slice(0, 3).forEach((text, index) => {
+    const card = node("article", null, "focus-signal");
+    card.append(node("span", `0${index + 1}`, "signal-number"));
+    const copy = node("p");
+    inline(copy, text);
+    card.append(copy);
+    signals.append(card);
+  });
+  if (!sections.signals.length)
+    signals.append(
+      node(
+        "p",
+        "Open the full briefing for the latest source-backed readings.",
+        "focus-empty",
+      ),
+    );
+  markdown(
+    "home-watch-content",
+    sections.watch.slice(0, 2).join("\n\n") ||
+      "Review the full briefing and source notes before using this analysis.",
+  );
+  markdown("full-analysis-content", analysis.answer);
+  quality("home-analysis-quality", analysis);
+  hide(
+    "home-review-notice",
+    !$("home-analysis-quality").classList.contains("warning"),
+  );
+  $("analysis-data-time").textContent =
+    `Based on data retrieved ${timeLabel(analysis.data_retrieved_at)}`;
+}
 function renderWorkspace() {
   const workspace = state.data.workspace;
   $("last-data-time").textContent = timeLabel(state.data.retrieved_at);
   $("last-ai-time").textContent = timeLabel(workspace.analysis?.completed_at);
-  const analysis = workspace.analysis;
-  if (analysis) {
-    $("home-analysis-content").classList.remove("empty-state", "compact");
-    markdown("home-analysis-content", analysis.answer);
-    quality("home-analysis-quality", analysis);
-    $("analysis-data-time").textContent =
-      `Data retrieved ${timeLabel(analysis.data_retrieved_at)}`;
-  } else {
-    clear("home-analysis-content").append(
-      node(
-        "p",
-        "No AI analysis for the current data. Use Run AI analysis to generate one.",
-      ),
-    );
-    hide("home-analysis-quality");
-    $("analysis-data-time").textContent = "";
-  }
+  renderHomeBriefing(workspace.analysis);
   const history = workspace.history || [];
   $("history-count").textContent =
     `${history.length} ${history.length === 1 ? "run" : "runs"}`;
@@ -763,15 +825,11 @@ function renderActivity(job) {
 function setPipelineBusy(active) {
   for (const id of [
     "refresh-market",
-    "run-analysis",
-    "refresh-data",
     "ask-submit",
     "generate-brief",
     "reset-chat",
   ])
-    $(id).disabled =
-      active ||
-      (id === "run-analysis" && (!state.ai || !state.data?.workspace.has_data));
+    $(id).disabled = active;
   $("refresh-market-label").textContent = active
     ? "Update in progress…"
     : state.ai
@@ -807,13 +865,13 @@ async function pollPipeline(id, owner) {
     setPipelineBusy(false);
   }
 }
-async function runPipeline(analysisOnly = false, automatic = false) {
+async function runPipeline(automatic = false) {
   if (state.active) return;
   state.active = { kind: "pipeline", id: null, owner: true };
   setPipelineBusy(true);
   hide("pipeline-error");
   try {
-    const started = await api(analysisOnly ? "/api/analyze" : "/api/refresh", {
+    const started = await api("/api/refresh", {
       automatic,
     });
     if (!started.skipped) await pollPipeline(started.id, started.owner);
@@ -826,7 +884,6 @@ async function runPipeline(analysisOnly = false, automatic = false) {
   }
 }
 $("refresh-market").addEventListener("click", () => runPipeline());
-$("run-analysis").addEventListener("click", () => runPipeline(true));
 $("cancel-pipeline").addEventListener("click", async () => {
   if (state.active?.id && state.active.owner) {
     try {
@@ -1053,13 +1110,11 @@ function busy(active, kind) {
     "ask-ai",
     "brief-ai",
     "refresh-market",
-    "run-analysis",
   ]) {
     $(id).disabled =
       active ||
       (id === "ask-ai" && !state.ai) ||
-      (id === "brief-ai" && !state.briefAI) ||
-      (id === "run-analysis" && (!state.ai || !state.data?.workspace.has_data));
+      (id === "brief-ai" && !state.briefAI);
   }
   document
     .querySelectorAll("[data-question]")
@@ -1217,7 +1272,7 @@ async function init() {
     ) {
       await pollPipeline(activity.id, false);
     } else if (!state.data.workspace.has_data) {
-      await runPipeline(false, true);
+      await runPipeline(true);
     }
   } catch (error) {
     $("error-message").textContent = error.message;

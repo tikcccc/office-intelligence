@@ -5,10 +5,11 @@ market headlines and research briefs into one English-language interface.
 
 ## Features
 
-- A prominent Get latest data & run AI action, plus a separate Run AI analysis action.
+- One prominent Get latest data & run AI action on the overview.
 - Automatic one-time retrieval on entry when no live data has been collected.
 - Animated source-by-source progress, cancellation, retrieval/analysis timestamps, duration and recent run history.
-- Market overview with vacancy, prime rent and Bank Rate readings, publishers and reporting periods.
+- A focused overview with a market interpretation, up to three key readings and source coverage notes.
+- Detailed broker readings, macro indicators and market headlines in Market evidence.
 - Broker comparisons filtered by metric, submarket and exact period. Figures are independent and never averaged across publishers.
 - Market questions using keyword routing or explicitly selected model-assisted analysis.
 - Source panels with original definitions, report links, periods and confidence notes.
@@ -49,9 +50,9 @@ AI and broker extraction are shown as unavailable. To disable model calls explic
 .\.venv\Scripts\python.exe -m office_agent.server --no-ai
 ```
 
-The overview has two controls: **Get latest data & run AI** refreshes sources before analysis;
-**Run AI analysis** reuses the retrieved evidence without fetching sources again. Each stage reports its
-own status. A failed source is not filled with sample data. AI audit flags remain visible for review.
+The overview uses a single **Get latest data & run AI** control to refresh sources before analysis.
+Progress and timestamps remain visible; source stages and history are under **Update activity**.
+A failed source is not filled with sample data. AI audit flags remain visible, with details under **Source notes**.
 
 | Environment variable | Purpose |
 | --- | --- |
