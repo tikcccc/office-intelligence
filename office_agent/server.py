@@ -63,9 +63,12 @@ class Session:
 
 
 class DashboardApp:
-    def __init__(self, *, allow_llm: bool = True, allow_live: bool = True, admit_job=None):
+    def __init__(self, *, allow_llm: bool = True, allow_live: bool = True, admit_job=None, max_sessions=32):
         self.allow_llm, self.allow_live = allow_llm, allow_live
         self.admit_job = admit_job
+        if not 4 <= max_sessions <= 512:
+            raise ValueError("Session capacity must be between 4 and 512.")
+        self.max_sessions = max_sessions
         self.sessions: dict[str, Session] = {}
         self.lock = threading.RLock()
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="dashboard")
@@ -78,7 +81,7 @@ class DashboardApp:
         self.refresh_owner: str | None = None
         self.auto_attempted = False
 
-    def session(self, cookie: str | None) -> tuple[Session, bool]:
+    def session(self, cookie: str | None, *, create=True) -> tuple[Session | None, bool]:
         parsed = SimpleCookie()
         try:
             parsed.load(cookie or "")
@@ -93,8 +96,15 @@ class DashboardApp:
                 session = self.sessions[key]
                 session.touched = time.monotonic()
                 return session, False
-            if len(self.sessions)>=32:
-                raise APIError(503, "The workspace is at session capacity. Please try again later.")
+            if not create:
+                return None, False
+            if len(self.sessions)>=self.max_sessions:
+                idle = [s for s in self.sessions.values() if not s.active]
+                if not idle:
+                    raise APIError(503, "All browser sessions are busy. Please try again shortly.")
+                # Empty visitor sessions are expendable; preserve active jobs and recent conversations.
+                oldest = min(idle, key=lambda s:(bool(s.jobs or s.agent.messages), s.touched))
+                del self.sessions[oldest.id]
             session = Session()
             self.sessions[session.id] = session
             return session, True
@@ -442,9 +452,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 name,kind = static[parts.path]
                 self._send(200,(STATIC/name).read_bytes(),kind+"; charset=utf-8")
                 return
-            session, created = self.server.app.session(self.headers.get("Cookie"))
-            cookie = session.id if created else None
             if parts.path=="/api/bootstrap":
+                session, created = self.server.app.session(self.headers.get("Cookie"))
+                cookie = session.id if created else None
                 self._json(200,{"csrf":session.csrf,"ai_available":self.server.app.allow_llm and llm.available("chat"),
                                 "brief_ai_available":self.server.app.allow_llm and llm.available("brief"),
                                 "live_available":self.server.app.allow_live,"server_time":timestamp()},cookie=cookie)
@@ -452,21 +462,24 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 query = parse_qs(parts.query)
                 if set(query)-{"offline","force"} or any(v not in (["0"],["1"]) for v in query.values()):
                     raise APIError(400,"Invalid data request options.")
-                self._json(200,self.server.app.dashboard(offline=query.get("offline",["0"])[0]=="1"),cookie=cookie)
+                self._json(200,self.server.app.dashboard(offline=query.get("offline",["0"])[0]=="1"))
             elif parts.path=="/api/activity":
                 self._json(200,{"activity":self.server.app.public_job(self.server.app.refresh_job) if self.server.app.refresh_job else None,
-                                "retrieved_at":(self.server.app.workspace.read()["data"] or {}).get("retrieved_at")},cookie=cookie)
+                                "retrieved_at":(self.server.app.workspace.read()["data"] or {}).get("retrieved_at")})
             elif parts.path.startswith("/api/jobs/"):
                 pieces = parts.path.strip("/").split("/")
                 if len(pieces) not in (3,4):
                     raise APIError(404,"Endpoint not found.")
+                session, _ = self.server.app.session(self.headers.get("Cookie"), create=False)
+                if session is None:
+                    raise APIError(404,"Task not found in this session.")
                 job = self.server.app.get_job(session,pieces[2])
                 if len(pieces)==4:
                     if pieces[3]!="download" or job.kind!="brief" or job.status!="done" or not job.result:
                         raise APIError(404,"The brief is not ready to download.")
                     self._send(200,job.result["brief"].encode("utf-8"),"text/markdown; charset=utf-8",download=job.result["filename"])
                 else:
-                    self._json(200,self.server.app.public_job(job),cookie=cookie)
+                    self._json(200,self.server.app.public_job(job))
             else:
                 raise APIError(404,"Page not found.")
         except APIError as exc:
@@ -479,8 +492,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             self._guard()
-            session, created = self.server.app.session(self.headers.get("Cookie"))
-            if created or not secrets.compare_digest(self.headers.get("X-CSRF-Token", ""),session.csrf):
+            session, _ = self.server.app.session(self.headers.get("Cookie"), create=False)
+            if session is None or not secrets.compare_digest(self.headers.get("X-CSRF-Token", ""),session.csrf):
                 raise APIError(403,"Your session has expired. Refresh the page.")
             if self.headers.get("Transfer-Encoding") or self.headers.get("Content-Type","").split(";")[0]!="application/json":
                 raise APIError(415,"The request must use JSON.")

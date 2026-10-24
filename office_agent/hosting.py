@@ -123,4 +123,4 @@ def create_application():
     PublicApplication(None, origin)
     limits = UsageLimits(config.DATA_DIR / "public_usage.sqlite", daily_jobs=int(os.environ.get("OFFICE_AGENT_DAILY_JOBS", "30")),
                          refresh_seconds=int(os.environ.get("OFFICE_AGENT_REFRESH_INTERVAL", "120")))
-    return PublicApplication(DashboardApp(admit_job=limits), origin)
+    return PublicApplication(DashboardApp(admit_job=limits, max_sessions=128), origin)

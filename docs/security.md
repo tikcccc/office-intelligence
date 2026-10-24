@@ -14,9 +14,9 @@ links use HTTPS and `noopener noreferrer`.
 
 ## Sessions and task budgets
 
-Conversations, jobs and briefs belong to their browser session. The service retains at most 32 sessions,
+Conversations, jobs and briefs belong to their browser session. The local service retains at most 32 sessions (128 for Docker hosting),
 4 concurrent tasks and 8 recent tasks per session. Each session runs one task at a time. Idle sessions
-expire after one hour; a restart clears browser sessions and in-memory downloads. Retrieved market data, analysis and the last 20 activity records are stored in an ignored local workspace file; they are not included in the public repository.
+expire after one hour; at capacity, the least recently used idle session is reclaimed, with empty sessions reclaimed first. Active jobs are never evicted. Only bootstrap creates a session: shared reads, missing paths and unauthenticated POSTs do not allocate one. A restart clears browser sessions and in-memory downloads. Retrieved market data, analysis and the last 20 activity records are stored in an ignored local workspace file; they are not included in the public repository.
 
 Chat/brief tasks have a 90-second deadline; live update pipelines have a 180-second deadline. Model output is limited to 6,000 tokens per call, with one bounded extraction attempt per report. Nested contexts
 inherit cancellation. Guarded writes check cancellation before committing data or replacing output.
