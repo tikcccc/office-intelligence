@@ -840,12 +840,6 @@ main {
   line-height: 1.9;
   margin: 0;
 }
-.research-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.85fr) minmax(270px, 1fr);
-  gap: 22px;
-  align-items: start;
-}
 .chat-panel {
   padding: 0;
   overflow: hidden;
@@ -965,16 +959,6 @@ main {
   padding: 0 22px;
   margin: 11px 0 15px;
 }
-.evidence-panel {
-  position: sticky;
-  top: 20px;
-}
-.evidence-panel .panel-heading {
-  margin-bottom: 17px;
-}
-.evidence-panel .panel-heading > .icon {
-  color: #8ba07c;
-}
 .quality-box {
   border: 1px solid #dfe8d6;
   background: #f5f8ef;
@@ -1005,11 +989,6 @@ main {
   padding-left: 16px;
   font-size: 10px;
   margin: 8px 0 0;
-}
-.evidence-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 15px;
 }
 .source-card {
   padding: 13px;
@@ -1681,10 +1660,6 @@ main {
   .hero-art svg {
     margin-bottom: 16px;
   }
-  .research-layout {
-    grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
-    gap: 17px;
-  }
   .panel {
     padding: 20px;
   }
@@ -1794,12 +1769,6 @@ main {
   }
   .overview-grid {
     gap: 16px;
-  }
-  .research-layout {
-    grid-template-columns: minmax(0, 1.7fr) minmax(220px, 1fr);
-  }
-  .evidence-panel {
-    top: 120px;
   }
   .page-intro h1 {
     font-size: 28px;
@@ -2056,9 +2025,6 @@ main {
   .page-intro p {
     font-size: 11px;
   }
-  .research-layout {
-    grid-template-columns: 1fr;
-  }
   .chat-panel {
     padding: 0;
   }
@@ -2087,9 +2053,6 @@ main {
   .composer-note {
     padding: 0 17px;
     font-size: 8px;
-  }
-  .evidence-panel {
-    position: static;
   }
   .chat-welcome {
     padding: 25px 0 15px;

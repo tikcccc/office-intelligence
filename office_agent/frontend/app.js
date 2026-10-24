@@ -1020,28 +1020,6 @@ function sourceCheckLabel(issue) {
     return `${text.slice("Figure not directly matched in sources: ".length)} — This figure was not found directly in the supplied data.`;
   return text;
 }
-function answerSources(sources) {
-  const root = clear("answer-sources");
-  for (const source of sources) {
-    const card = node("div", null, "source-card");
-    card.append(
-      node("strong", `${source.id} · ${source.publisher}`),
-      node("p", source.period),
-    );
-    const b = node("button", "Source details ↗", "text-button");
-    b.addEventListener("click", () => openSources([source]));
-    card.append(b);
-    root.append(card);
-  }
-  if (!sources.length)
-    root.append(
-      node(
-        "p",
-        "This answer has no traceable sources. Verify it before quoting.",
-        "empty-state compact",
-      ),
-    );
-}
 function message(role, text, result = null) {
   const log = $("chat-log");
   log.querySelector(".chat-welcome")?.remove();
@@ -1102,12 +1080,7 @@ async function runJob(kind, payload) {
   if (state.active) return;
   state.active = { id: null, kind };
   busy(true, kind);
-  if (kind === "ask") {
-    clear("answer-sources");
-    clear("answer-quality").append(
-      node("p", "Gathering the evidence for this answer…"),
-    );
-  } else {
+  if (kind !== "ask") {
     clear("brief-preview").append(
       node("p", "Gathering the evidence for your brief…", "empty-state"),
     );
@@ -1141,8 +1114,6 @@ async function runJob(kind, payload) {
         result.answer.replace(/\n\n_Check:[\s\S]*_$/, ""),
         result,
       );
-      quality("answer-quality", result);
-      answerSources(result.sources);
     } else {
       markdown("brief-preview", result.brief);
       quality("brief-quality", result);
@@ -1203,10 +1174,6 @@ async function resetChat() {
       "A fresh conversation is ready. Start with a specific market question.",
       "empty-state compact",
     ),
-  );
-  clear("answer-sources");
-  clear("answer-quality").append(
-    node("p", "Evidence for the next answer will appear here."),
   );
 }
 $("reset-chat").addEventListener("click", () =>
