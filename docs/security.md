@@ -49,10 +49,21 @@ Question text is omitted from logs by default; a SHA-256 digest is retained for 
 not encryption and can reveal known/repeated inputs. `OFFICE_AGENT_LOG_INPUT=1` opts into redacted input
 logging. Redaction cannot identify every sensitive business detail and is not retroactive.
 
-## Before public hosting
+## Docker hosting
 
-Replace the standard-library HTTP adapter with a production HTTP service. Add HTTPS, authentication,
-per-user authorization, durable session/task storage, rate and spending quotas, a reviewed reverse proxy,
-secret rotation and retention controls. Do not expose the local adapter by merely changing its bind
-address. Use CI, dependency scanning and operational monitoring. Pinned dependencies support
-reproducibility; the lock file is not a vulnerability audit.
+The Docker image uses Gunicorn and a WSGI adapter that reuses the endpoint logic. The development server stays
+loopback-only. Configure one worker/one replica behind an HTTPS proxy; the internal container port must not be
+published on the host. Public Host/Origin checks use a configured exact HTTPS origin, ignoring forwarded-host
+headers. Cookies add Secure and responses include HSTS. The health endpoint returns only a static status.
+
+Public paid-analysis/retrieval jobs have a shared daily admission limit stored in SQLite and a refresh cooldown.
+The default is 30 jobs per UTC day and 120 seconds between refreshes. One job can make multiple model calls;
+these controls do not guarantee a currency-denominated spending cap. Provider-side budget controls are separate.
+There is no user login: anyone with the public URL can read the shared market workspace and use the shared
+budget. Browser sessions isolate conversations and job downloads, not authenticated user identities. Add an
+authentication gateway before using private documents or confidential business data. Sessions and tasks reset
+on container restart; the data volume preserves retrieved evidence and admission counts.
+
+The image runs without root and excludes local credentials, collected data, research documents and evaluation
+material from its build context. Supply credentials only at runtime. Use dependency scanning, secret rotation,
+backups and operational monitoring. Pinned dependencies support repeatability; they are not a vulnerability audit.

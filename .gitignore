@@ -6,6 +6,10 @@
 !/README.md
 !/requirements.txt
 !/requirements.lock
+!/requirements-server.txt
+!/Dockerfile
+!/.dockerignore
+!/gunicorn.conf.py
 !/office_agent/
 !/docs/
 /docs/*

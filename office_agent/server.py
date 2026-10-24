@@ -63,8 +63,9 @@ class Session:
 
 
 class DashboardApp:
-    def __init__(self, *, allow_llm: bool = True, allow_live: bool = True):
+    def __init__(self, *, allow_llm: bool = True, allow_live: bool = True, admit_job=None):
         self.allow_llm, self.allow_live = allow_llm, allow_live
+        self.admit_job = admit_job
         self.sessions: dict[str, Session] = {}
         self.lock = threading.RLock()
         self.pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="dashboard")
@@ -144,6 +145,12 @@ class DashboardApp:
                 raise APIError(409, "A task is already running. Wait for it or cancel it.")
             if not self.slots.acquire(blocking=False):
                 raise APIError(503, "All analysis slots are busy. Please try again shortly.")
+            try:
+                if self.admit_job:
+                    self.admit_job(kind, use_llm)
+            except Exception:
+                self.slots.release()
+                raise
             if len(session.jobs)>=8:
                 oldest = next(iter(session.jobs))
                 del session.jobs[oldest]

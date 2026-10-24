@@ -86,6 +86,7 @@ CLI briefs are written to `output/`; browser briefs remain in session memory and
 office_agent/
   frontend/       English interface, charts and safe Markdown rendering
   server.py       Local HTTP adapter, browser sessions and bounded jobs
+  hosting.py      HTTPS-origin WSGI adapter and persistent public usage limits
   dashboard.py    Dashboard data assembled from existing skills
   agent.py        Tool selection, permissions and answer orchestration
   skills/         Broker metrics, macro data, news and briefs
@@ -108,9 +109,16 @@ Report URLs and layouts may change and require maintenance.
 
 ## Server deployment
 
-The included HTTP adapter binds to `127.0.0.1` for local operation. Reuse the frontend and business modules
-behind a production HTTP adapter, then add HTTPS, authentication, per-user authorization, shared task and
-session storage, rate and spending limits, secret management and dependency scanning. Review the proxy
-and Origin policy for the deployed domain. See [security boundaries](docs/security.md).
+Build the included `Dockerfile` and expose container port `8765` through an HTTPS reverse proxy, such as
+Coolify. Set `OFFICE_AGENT_PUBLIC_ORIGIN` to the exact public origin (for example `https://market.example.com`,
+without a trailing slash). Configure AI credentials as runtime secrets, not build arguments. Mount a
+persistent volume at `/app/data`; the container runs as UID `10001`. Do not map port `8765` directly to the internet.
+
+The image uses Gunicorn with one worker and eight threads. Keep one worker and one replica: browser sessions
+and active tasks are in memory, while retrieved data and public usage counts persist in the volume. Health
+checks use `/healthz`. Public cookies are Secure and incoming Host/Origin values must match the configured domain.
+By default the shared workspace allows 30 paid-analysis/retrieval jobs per UTC day and a 120-second interval
+between refreshes. Configure `OFFICE_AGENT_DAILY_JOBS` and `OFFICE_AGENT_REFRESH_INTERVAL` as needed. These are
+job admission limits, not a monetary spending cap. Public visitors share the budget. See [security boundaries](docs/security.md).
 
 No license grant is included in this repository. Original publications remain subject to their publishers' terms.

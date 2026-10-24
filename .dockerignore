@@ -1,0 +1,9 @@
+**
+!requirements.lock
+!requirements-server.txt
+!gunicorn.conf.py
+!office_agent/
+!office_agent/**
+office_agent/**/__pycache__/
+office_agent/**/*.pyc
+office_agent/snapshot/
