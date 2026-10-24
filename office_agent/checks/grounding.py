@@ -139,7 +139,9 @@ def audit(answer: str, tool_texts: list[str]) -> dict:
             matching = [r for r in records if r["publisher"].lower() in cited
                         and any(_found(c, [r["value"]]) for c in _candidates(raw, unit))]
             if matching:
-                before = answer[max(0, m.start() - 120):m.start()]
+                # An unrelated earlier sentence must not supply the metric or location.
+                before = re.split(r"\n|(?<=[.!?。！？])\s+(?=[A-Z])",
+                                  answer[:m.start()])[-1][-120:]
                 if problem := _context_problem(matching, cite.group(1), before, tail, unit):
                     unverified.append(f"{label}: {problem}")
     result = {"traced": traced, "not_found": missing, "wrong_source": wrong}

@@ -2535,6 +2535,18 @@ main {
   font-size: 10px;
   line-height: 1.8;
 }
+.history-heading {
+  font-size: 11px;
+  font-weight: 500;
+  margin: 20px 0 0;
+}
+.quality-details {
+  margin-top: 12px;
+}
+.quality-details summary {
+  cursor: pointer;
+  font-size: 11px;
+}
 .history-item summary {
   cursor: pointer;
 }

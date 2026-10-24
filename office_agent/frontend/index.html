@@ -96,11 +96,11 @@
           <section class="panel live-console" aria-labelledby="live-title">
             <div class="live-console-heading">
               <div>
-                <span class="eyebrow">LIVE RESEARCH PIPELINE</span>
+                <span class="eyebrow">MARKET UPDATES</span>
                 <h2 id="live-title">Fresh evidence. A clearer market view.</h2>
                 <p>
-                  Get current source data, extract broker readings and run AI
-                  analysis in one place.
+                  Refresh the sources for a concise view of the London office
+                  market.
                 </p>
               </div>
               <div class="live-actions">
@@ -119,15 +119,15 @@
             </p>
             <div class="activity-metadata">
               <div>
-                <span>Last data retrieval</span
+                <span>Data updated</span
                 ><strong id="last-data-time">Not yet retrieved</strong>
               </div>
               <div>
-                <span>Last AI analysis</span
+                <span>Analysis updated</span
                 ><strong id="last-ai-time">Not yet run</strong>
               </div>
               <div>
-                <span>Latest run</span
+                <span>Update status</span
                 ><strong id="last-run-state">Ready</strong>
               </div>
             </div>
@@ -146,16 +146,17 @@
               </div>
               <div class="pipeline-track" aria-hidden="true"></div>
             </div>
-            <ol id="pipeline-steps" class="pipeline-steps"></ol>
             <div
               id="pipeline-error"
               class="notice error hidden"
               role="alert"
             ></div>
-            <details class="run-history">
+            <details class="run-history" id="update-details">
               <summary>
-                Recent activity <span id="history-count">0 runs</span>
+                Update details <span id="history-count">0 runs</span>
               </summary>
+              <ol id="pipeline-steps" class="pipeline-steps"></ol>
+              <h3 class="history-heading">Recent updates</h3>
               <div id="run-history-list"></div>
             </details>
           </section>
@@ -166,9 +167,7 @@
             <div class="panel-heading">
               <div>
                 <span class="eyebrow">LATEST AI PERSPECTIVE</span>
-                <h2 id="home-analysis-title">
-                  What the evidence is telling us
-                </h2>
+                <h2 id="home-analysis-title">Your market briefing</h2>
               </div>
               <span id="analysis-data-time" class="small muted"></span>
             </div>

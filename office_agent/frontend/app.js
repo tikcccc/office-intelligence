@@ -638,6 +638,20 @@ function timeLabel(value) {
     }).format(d) + " HKT"
   );
 }
+function statusLabel(status) {
+  return (
+    {
+      queued: "Waiting",
+      running: "In progress",
+      done: "Completed",
+      reused: "Using current data",
+      partial: "Partly available",
+      failed: "Unsuccessful",
+      skipped: "Not run",
+      cancelled: "Cancelled",
+    }[status] || status
+  );
+}
 function renderWorkspace() {
   const workspace = state.data.workspace;
   $("last-data-time").textContent = timeLabel(state.data.retrieved_at);
@@ -668,7 +682,7 @@ function renderWorkspace() {
     item.append(
       node(
         "summary",
-        `${record.kind === "analysis" ? "AI analysis" : "Live update"} · ${timeLabel(record.started_at)} · ${record.status} · ${record.seconds}s`,
+        `${record.kind === "analysis" ? "AI analysis" : "Market update"} · ${timeLabel(record.started_at)} · ${statusLabel(record.status)} · ${record.seconds}s`,
       ),
     );
     item.append(node("p", `Completed: ${timeLabel(record.completed_at)}`));
@@ -676,7 +690,7 @@ function renderWorkspace() {
       item.append(
         node(
           "p",
-          `${step.label}: ${step.status}${step.detail ? " — " + step.detail : ""}`,
+          `${step.label}: ${statusLabel(step.status)}${step.detail ? " — " + step.detail : ""}`,
         ),
       );
     if (record.error) item.append(node("p", record.error, "history-error"));
@@ -699,11 +713,11 @@ function renderActivity(job) {
             ["failed", "partial"].includes(s.status) ||
             (s.status === "skipped" && job.kind !== "analysis"),
         )
-        ? "Completed with warnings"
+        ? "Completed · See update notes"
         : job.result?.review_required
-          ? "Completed · Review AI checks"
+          ? "Completed · Source review needed"
           : "Completed"
-      : job.status;
+      : statusLabel(job.status);
   $("pipeline-label").textContent =
     job.events?.at(-1) || "Starting live update";
   const elapsed =
@@ -733,7 +747,10 @@ function renderActivity(job) {
       ),
     );
     const text = node("div");
-    text.append(node("strong", step.label), node("span", step.status));
+    text.append(
+      node("strong", step.label),
+      node("span", statusLabel(step.status)),
+    );
     if (step.detail) text.append(node("p", step.detail));
     if (step.completed_at)
       text.append(node("small", timeLabel(step.completed_at)));
@@ -881,7 +898,9 @@ function quality(id, result) {
     ...(check?.not_found || []).map(
       (x) => `Figure not directly matched in sources: ${x}`,
     ),
-    ...(check?.wrong_source || []),
+    ...(check?.wrong_source || []).map(
+      (x) => `Publisher attribution needs checking: ${x}`,
+    ),
     ...(check?.unverified || []),
   ];
   const warning =
@@ -895,40 +914,78 @@ function quality(id, result) {
     node(
       "strong",
       !result.used_llm
-        ? "Factual digest · No AI calls"
+        ? "Source summary"
         : warning
-          ? "Some claims need source verification"
-          : "AI analysis · Review the sources",
+          ? "Check flagged figures before sharing"
+          : "AI-generated briefing",
     ),
   );
   box.append(
     node(
       "p",
       !result.used_llm
-        ? "Readings and sources are presented directly, without model-written analysis."
+        ? "Readings are presented directly from the sources."
         : warning
-          ? "Automated checks flagged claims. Review the notes before quoting."
-          : "Automated numeric checks support review; they do not validate every conclusion.",
+          ? "Some figures could not be fully linked to their source context. This does not necessarily mean they are wrong."
+          : "Review the linked sources before quoting. Automated checks do not verify every conclusion.",
     ),
   );
-  if (check)
-    box.append(
-      node(
-        "p",
-        typeof check.summary === "string"
-          ? check.summary
-          : `${check.traced ?? 0} numeric matches in source data; ${warnings.length} claims to verify`,
-      ),
-    );
+  if (!check) return;
+  const details = node("details", null, "quality-details");
+  details.append(
+    node(
+      "summary",
+      warning
+        ? `View source checks${warnings.length ? ` (${warnings.length})` : ""}`
+        : "About the source checks",
+    ),
+  );
+  details.append(
+    node(
+      "p",
+      `${check.traced ?? 0} figures found in the source data. A numeric match alone does not confirm the meaning, date or attribution.`,
+    ),
+  );
   for (const issue of warnings.slice(0, 6))
-    box.append(
+    details.append(node("p", sourceCheckLabel(issue)));
+  if (warning && !warnings.length)
+    details.append(
       node(
         "p",
-        typeof issue === "string"
-          ? issue
-          : issue.reason || issue.message || JSON.stringify(issue),
+        "The source check did not confirm this briefing. Review the original sources.",
       ),
     );
+  box.append(details);
+}
+function sourceCheckLabel(issue) {
+  const text =
+    typeof issue === "string"
+      ? issue
+      : issue.reason || issue.message || JSON.stringify(issue);
+  const reasons = {
+    "metric context does not match":
+      "The figure was found, but the checker could not confirm it refers to this measure.",
+    "submarket context does not match":
+      "The figure was found, but its location could not be confirmed.",
+    "cited period does not match or is missing":
+      "The reporting date needs checking against the original source.",
+    "missing adjacent citation":
+      "A source citation is missing beside this figure.",
+    "unknown cited publisher":
+      "The named publisher could not be linked to the supplied sources.",
+    "unit does not match":
+      "The unit needs checking against the original source.",
+    "currency does not match":
+      "The currency needs checking against the original source.",
+    "area unit does not match":
+      "The area unit needs checking against the original source.",
+  };
+  for (const [reason, explanation] of Object.entries(reasons))
+    if (text.endsWith(`: ${reason}`))
+      return `${text.slice(0, -reason.length - 2)} — ${explanation}`;
+  if (text.startsWith("Figure not directly matched in sources: "))
+    return `${text.slice("Figure not directly matched in sources: ".length)} — This figure was not found directly in the supplied data.`;
+  return text;
 }
 function answerSources(sources) {
   const root = clear("answer-sources");
@@ -1144,7 +1201,7 @@ async function init() {
     $("ask-ai").disabled = !state.ai;
     $("brief-ai").disabled = !state.briefAI;
     $("pipeline-capability").textContent = state.ai
-      ? "Configured AI is ready. Updates use live sources only. Times are shown in HKT."
+      ? "Live sources · AI ready · Hong Kong time (HKT)"
       : "Live retrieval is available. AI analysis requires a configured provider on this server. Times are shown in HKT.";
     $("refresh-market-label").textContent = state.ai
       ? "Get latest data & run AI"
