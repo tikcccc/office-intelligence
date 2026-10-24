@@ -364,7 +364,7 @@ function bestPeriod(rows) {
     )[0] || ""
   );
 }
-function renderEvidence() {
+function renderOverview() {
   const d = state.data;
   const grid = clear("kpi-grid");
   grid.classList.remove("loading");
@@ -383,13 +383,23 @@ function renderEvidence() {
     }
     grid.append(el);
   });
+  const rows = d.rows.filter(
+      (r) => r.metric === "vacancy_rate" && r.submarket === "Central London",
+    ),
+    period = bestPeriod(rows);
+  $("mini-chart-context").textContent =
+    `Central London · Vacancy / availability (all grades) · ${period || "No period"}`;
+  bars(
+    "mini-chart",
+    rows.filter((r) => r.period === period),
+  );
   renderNews();
   const macro = clear("macro-grid");
   if (!d.macro.indicators.length)
     macro.append(
       node(
         "p",
-        "Macro readings are unavailable. Review the update details on the overview.",
+        "Macro readings are unavailable. Review the live retrieval status above.",
         "empty-state whole-grid",
       ),
     );
@@ -593,14 +603,14 @@ async function loadDashboard() {
   hide("global-error");
   try {
     state.data = await api("/api/dashboard");
-    renderEvidence();
+    renderOverview();
     setupFilters();
     renderWorkspace();
     $("data-badge").textContent = state.data.workspace.has_data
       ? "● Retrieved source data"
       : "● Awaiting live data";
     $("data-note").textContent = state.data.retrieved_at
-      ? "Live sources · Reporting periods vary by source"
+      ? `Data updated ${timeLabel(state.data.retrieved_at)}${state.data.workspace.analysis?.completed_at ? ` · AI updated ${timeLabel(state.data.workspace.analysis.completed_at)}` : ""}`
       : "The first live update starts automatically.";
   } catch (error) {
     $("error-message").textContent = error.message;
@@ -627,161 +637,17 @@ function timeLabel(value) {
     }).format(d) + " HKT"
   );
 }
-function statusLabel(status) {
-  return (
-    {
-      queued: "Waiting",
-      running: "In progress",
-      done: "Completed",
-      reused: "Using current data",
-      partial: "Partly available",
-      failed: "Unsuccessful",
-      skipped: "Not run",
-      cancelled: "Cancelled",
-    }[status] || status
-  );
-}
-function briefingSections(answer) {
-  const sections = { signals: [], meaning: [], watch: [] };
-  const headings = {
-    "key takeaways": "signals",
-    "market signals": "signals",
-    "what it could mean": "meaning",
-    implications: "meaning",
-    "what to watch": "watch",
-    "data gaps": "watch",
-  };
-  let current = null;
-  for (const raw of answer.split("\n")) {
-    const line = raw.trim();
-    if (!line) continue;
-    const heading = line
-      .replace(/^#{1,6}\s*/, "")
-      .replace(/\*\*/g, "")
-      .replace(/:$/, "")
-      .toLowerCase();
-    if (headings[heading]) {
-      current = headings[heading];
-    } else if (/^#{1,6}\s/.test(line) || heading === "broker perspectives") {
-      current = null;
-    } else if (current) {
-      sections[current].push(line.replace(/^[-*•]\s+|^\d+[.)]\s+/, ""));
-    }
-  }
-  return sections;
-}
-function renderHomeBriefing(analysis) {
-  const signals = clear("home-analysis-content");
-  hide("home-analysis-quality", !analysis);
-  hide("home-review-notice");
-  document
-    .querySelector(".full-analysis")
-    .classList.toggle("hidden", !analysis);
-  if (!analysis) {
-    $("home-analysis-title").textContent = state.data.workspace.has_data
-      ? "Your evidence is ready to explore."
-      : "Your next market view starts here.";
-    signals.append(
-      node(
-        "p",
-        state.data.workspace.has_data
-          ? state.ai
-            ? "Use Get latest data & run AI for a market perspective, or explore the retrieved sources in Market evidence."
-            : "Explore the retrieved sources in Market evidence. Configure an AI provider on the server to add a market perspective."
-          : "Retrieving live sources will bring the key market signals into focus.",
-        "focus-empty",
-      ),
-    );
-    $("home-watch-content").textContent =
-      "Check the reporting period, source coverage and broker definitions before quoting a figure.";
-    return;
-  }
-  const sections = briefingSections(analysis.answer);
-  $("home-analysis-title").textContent =
-    sections.meaning.join(" ").replace(/\*\*/g, "") ||
-    "Your latest market briefing is ready.";
-  sections.signals.slice(0, 3).forEach((text, index) => {
-    const card = node("article", null, "focus-signal");
-    card.append(node("span", `0${index + 1}`, "signal-number"));
-    const copy = node("p");
-    inline(copy, text);
-    card.append(copy);
-    signals.append(card);
-  });
-  if (!sections.signals.length)
-    signals.append(
-      node(
-        "p",
-        "Open the full briefing for the latest source-backed readings.",
-        "focus-empty",
-      ),
-    );
-  markdown(
-    "home-watch-content",
-    sections.watch.slice(0, 2).join("\n\n") ||
-      "Review the full briefing and source notes before using this analysis.",
-  );
-  markdown("full-analysis-content", analysis.answer);
-  quality("home-analysis-quality", analysis);
-  hide(
-    "home-review-notice",
-    !$("home-analysis-quality").classList.contains("warning"),
-  );
-  $("analysis-data-time").textContent =
-    `Based on data retrieved ${timeLabel(analysis.data_retrieved_at)}`;
-}
 function renderWorkspace() {
-  const workspace = state.data.workspace;
-  $("last-data-time").textContent = timeLabel(state.data.retrieved_at);
-  $("last-ai-time").textContent = timeLabel(workspace.analysis?.completed_at);
-  renderHomeBriefing(workspace.analysis);
-  const history = workspace.history || [];
-  $("history-count").textContent =
-    `${history.length} ${history.length === 1 ? "run" : "runs"}`;
-  const root = clear("run-history-list");
-  for (const record of history.slice(0, 5)) {
-    const item = node("details", null, "history-item");
-    item.append(
-      node(
-        "summary",
-        `${record.kind === "analysis" ? "AI analysis" : "Market update"} · ${timeLabel(record.started_at)} · ${statusLabel(record.status)} · ${record.seconds}s`,
-      ),
-    );
-    item.append(node("p", `Completed: ${timeLabel(record.completed_at)}`));
-    for (const step of record.steps || [])
-      item.append(
-        node(
-          "p",
-          `${step.label}: ${statusLabel(step.status)}${step.detail ? " — " + step.detail : ""}`,
-        ),
-      );
-    if (record.error) item.append(node("p", record.error, "history-error"));
-    root.append(item);
-  }
-  if (!history.length)
-    root.append(node("p", "No completed runs yet.", "small muted"));
-  const latest = workspace.activity || history[0];
+  const latest =
+    state.data.workspace.activity || state.data.workspace.history?.[0];
   if (latest) renderActivity(latest);
   if (!state.active) setPipelineBusy(false);
 }
 function renderActivity(job) {
   const running = !["done", "failed", "cancelled"].includes(job.status);
   hide("pipeline-progress", !running);
-  $("last-run-state").textContent = running
-    ? "Running"
-    : job.status === "done"
-      ? job.steps?.some(
-          (s) =>
-            ["failed", "partial"].includes(s.status) ||
-            (s.status === "skipped" && job.kind !== "analysis"),
-        )
-        ? "Completed · See update notes"
-        : job.result?.review_required
-          ? "Completed · Source review needed"
-          : "Completed"
-      : statusLabel(job.status);
   $("pipeline-label").textContent =
-    job.events?.at(-1) || "Starting live update";
+    job.events?.at(-1) || "Getting live sources";
   const elapsed =
     running && job.started_at
       ? Math.max(
@@ -790,37 +656,30 @@ function renderActivity(job) {
         )
       : job.seconds;
   $("pipeline-elapsed").textContent = `${elapsed || 0}s elapsed`;
-  const steps = clear("pipeline-steps");
-  for (const step of job.steps || []) {
-    const item = node("li", null, `pipeline-step ${step.status}`);
-    item.append(
-      node(
-        "span",
-        step.status === "running"
-          ? ""
-          : step.status === "done"
-            ? "✓"
-            : step.status === "queued"
-              ? "·"
-              : ["skipped", "reused"].includes(step.status)
-                ? "—"
-                : "!",
-        step.status === "running" ? "spinner" : "step-symbol",
-      ),
-    );
-    const text = node("div");
-    text.append(
-      node("strong", step.label),
-      node("span", statusLabel(step.status)),
-    );
-    if (step.detail) text.append(node("p", step.detail));
-    if (step.completed_at)
-      text.append(node("small", timeLabel(step.completed_at)));
-    item.append(text);
-    steps.append(item);
-  }
   hide("pipeline-error", !job.error);
   $("pipeline-error").textContent = job.error || "";
+}
+function showAnalysis() {
+  const analysis = state.data.workspace.analysis;
+  if (!analysis) return;
+  openSources(analysis.sources || []);
+  $("source-title").textContent = "AI market analysis";
+  const content = node("section", null, "analysis-drawer-content");
+  content.append(
+    node(
+      "p",
+      `Analysis updated ${timeLabel(analysis.completed_at)}`,
+      "small muted",
+    ),
+  );
+  const answer = node("div", null, "markdown");
+  markdown(answer, analysis.answer);
+  content.append(answer);
+  const checks = node("div", null, "quality-box");
+  checks.id = "drawer-analysis-quality";
+  content.append(checks);
+  $("source-content").prepend(content);
+  quality("drawer-analysis-quality", analysis);
 }
 function setPipelineBusy(active) {
   for (const id of [
@@ -833,7 +692,7 @@ function setPipelineBusy(active) {
   $("refresh-market-label").textContent = active
     ? "Update in progress…"
     : state.ai
-      ? "Get latest data & run AI"
+      ? "Run AI analysis"
       : "Get latest data";
   hide("pipeline-progress", !active);
 }
@@ -842,10 +701,11 @@ async function pollPipeline(id, owner) {
   setPipelineBusy(true);
   $("cancel-pipeline").disabled = !owner;
   const deadline = Date.now() + 195000;
+  let job;
   try {
     while (Date.now() < deadline) {
       const activity = await api("/api/activity");
-      const job = activity.activity;
+      job = activity.activity;
       if (!job || job.id !== id) break;
       renderActivity(job);
       if (
@@ -857,6 +717,7 @@ async function pollPipeline(id, owner) {
       await new Promise((resolve) => setTimeout(resolve, 800));
     }
     await loadDashboard();
+    return job;
   } catch (error) {
     $("pipeline-error").textContent = error.message;
     hide("pipeline-error", false);
@@ -867,6 +728,7 @@ async function pollPipeline(id, owner) {
 }
 async function runPipeline(automatic = false) {
   if (state.active) return;
+  const previousAnalysis = state.data?.workspace.analysis?.completed_at;
   state.active = { kind: "pipeline", id: null, owner: true };
   setPipelineBusy(true);
   hide("pipeline-error");
@@ -874,7 +736,21 @@ async function runPipeline(automatic = false) {
     const started = await api("/api/refresh", {
       automatic,
     });
-    if (!started.skipped) await pollPipeline(started.id, started.owner);
+    if (!started.skipped) {
+      const job = await pollPipeline(started.id, started.owner);
+      if (!automatic && job?.status === "done") {
+        if (
+          state.data.workspace.analysis?.completed_at !== previousAnalysis &&
+          state.data.workspace.analysis
+        )
+          showAnalysis();
+        else if (state.ai) {
+          $("pipeline-error").textContent =
+            "No new AI analysis was produced. Some sources or the AI service may be unavailable. Please try again.";
+          hide("pipeline-error", false);
+        } else toast("Live source data updated.");
+      }
+    }
   } catch (error) {
     $("pipeline-error").textContent = error.message;
     hide("pipeline-error", false);
@@ -1255,11 +1131,8 @@ async function init() {
     state.briefAI = bootstrap.brief_ai_available;
     $("ask-ai").disabled = !state.ai;
     $("brief-ai").disabled = !state.briefAI;
-    $("pipeline-capability").textContent = state.ai
-      ? "Live sources · AI ready · Hong Kong time (HKT)"
-      : "Live retrieval is available. AI analysis requires a configured provider on this server. Times are shown in HKT.";
     $("refresh-market-label").textContent = state.ai
-      ? "Get latest data & run AI"
+      ? "Run AI analysis"
       : "Get latest data";
     $("ai-hint").textContent = state.ai
       ? "Optional · Uses the configured model"

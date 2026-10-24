@@ -5,11 +5,11 @@ market headlines and research briefs into one English-language interface.
 
 ## Features
 
-- One prominent Get latest data & run AI action on the overview.
+- One Run AI analysis action on the market overview.
 - Automatic one-time retrieval on entry when no live data has been collected.
-- Animated source-by-source progress, cancellation, retrieval/analysis timestamps, duration and recent run history.
-- A focused overview with a market interpretation, up to three key readings and source coverage notes.
-- Detailed broker readings, macro indicators and market headlines in Market evidence.
+- Compact progress, cancellation and retrieval/analysis timestamps.
+- Market overview with vacancy, prime rent and Bank Rate readings, broker comparisons, headlines and macro indicators.
+- AI results open in a side panel, with source notes and numeric checks.
 - Broker comparisons filtered by metric, submarket and exact period. Figures are independent and never averaged across publishers.
 - Market questions using keyword routing or explicitly selected model-assisted analysis.
 - Source panels with original definitions, report links, periods and confidence notes.
@@ -50,9 +50,9 @@ AI and broker extraction are shown as unavailable. To disable model calls explic
 .\.venv\Scripts\python.exe -m office_agent.server --no-ai
 ```
 
-The overview uses a single **Get latest data & run AI** control to refresh sources before analysis.
-Progress and timestamps remain visible; source stages and history are under **Update activity**.
-A failed source is not filled with sample data. AI audit flags remain visible, with details under **Source notes**.
+The overview uses a single **Run AI analysis** control to refresh live sources before analysis.
+Progress appears while running; the completed result opens in a side panel with its sources and checks.
+Retrieval and analysis times are shown in HKT. A failed source is not filled with sample data.
 
 | Environment variable | Purpose |
 | --- | --- |

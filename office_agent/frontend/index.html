@@ -86,127 +86,152 @@
           class="view"
           aria-labelledby="overview-title"
         >
-          <section
-            class="live-console overview-header"
-            aria-labelledby="overview-title"
-          >
-            <div class="live-console-heading">
-              <div>
-                <span class="eyebrow">THE MARKET, IN FOCUS</span>
-                <h1 id="overview-title">London office market</h1>
-                <p>
-                  The key signals. The wider meaning. Your next conversation.
-                </p>
+          <div class="hero">
+            <div class="hero-copy">
+              <div class="eyebrow">
+                <span></span> LONDON OFFICE MARKET MONITOR
               </div>
-              <button class="button primary" id="refresh-market">
-                <span data-icon="refresh"></span
-                ><span id="refresh-market-label"
-                  >Get latest data &amp; run AI</span
+              <h1 id="overview-title">
+                Read the market.<br />Know your next move<span
+                  class="accent-period"
+                  >.</span
                 >
-              </button>
-            </div>
-            <div class="update-toolbar">
-              <p class="update-stamp">
-                <span class="status-dot"></span>Data updated
-                <strong id="last-data-time">Not yet retrieved</strong>
+              </h1>
+              <p>
+                Broker research, macro signals and market news.<br
+                  class="desktop-break"
+                />
+                One workspace for better-informed conversations.
               </p>
-              <span id="last-run-state" class="update-state">Ready</span>
-            </div>
-            <div
-              id="pipeline-progress"
-              class="pipeline-progress hidden"
-              role="status"
-            >
-              <div class="pipeline-status">
-                <span class="spinner"></span
-                ><strong id="pipeline-label">Starting live update</strong
-                ><span id="pipeline-elapsed">0s elapsed</span
-                ><button class="text-button" id="cancel-pipeline">
-                  Cancel
+              <div class="hero-actions">
+                <button class="button primary" id="refresh-market">
+                  <span data-icon="spark"></span
+                  ><span id="refresh-market-label">Run AI analysis</span>
                 </button>
-              </div>
-              <div class="pipeline-track" aria-hidden="true"></div>
-            </div>
-            <div
-              id="pipeline-error"
-              class="notice error hidden"
-              role="alert"
-            ></div>
-            <details class="run-history" id="update-details">
-              <summary>
-                Update activity
-                <span id="history-count">0 runs</span>
-              </summary>
-              <div class="update-options">
-                <div>
-                  <p id="pipeline-capability" class="small muted">
-                    Connecting to the live research service…
-                  </p>
-                  <p class="small muted">
-                    Analysis updated
-                    <strong id="last-ai-time">Not yet run</strong>
-                  </p>
-                </div>
-              </div>
-              <ol id="pipeline-steps" class="pipeline-steps"></ol>
-              <h3 class="history-heading">Recent updates</h3>
-              <div id="run-history-list"></div>
-            </details>
-          </section>
-
-          <div class="market-focus-layout">
-            <section
-              class="market-readout"
-              aria-labelledby="home-analysis-title"
-            >
-              <div class="readout-kicker">
-                <span class="eyebrow">THE BIG PICTURE</span
-                ><span class="readout-label">AI perspective</span>
-              </div>
-              <h2 id="home-analysis-title">
-                Your next market view starts here.
-              </h2>
-              <p class="readout-caption">
-                An interpretation of the retrieved evidence.
-              </p>
-              <div class="signal-heading">
-                <span class="eyebrow">KEY EVIDENCE</span
-                ><a href="#metrics" class="text-button"
-                  >Explore the sources ↗</a
+                <a class="button ghost" href="#ask"
+                  ><span data-icon="spark"></span> Ask the market
+                  <span aria-hidden="true">↗</span></a
+                ><a class="button ghost" href="#metrics"
+                  >Explore the evidence <span aria-hidden="true">→</span></a
                 >
               </div>
-              <div id="home-analysis-content" class="focus-signals">
-                <p class="focus-empty">
-                  Your key signals will appear after the first live update.
-                </p>
-              </div>
-            </section>
-            <aside class="panel focus-watch" aria-labelledby="home-watch-title">
-              <span class="watch-mark" data-icon="shield"></span>
-              <span class="eyebrow">KEEP IN MIND</span>
-              <h2 id="home-watch-title">Read with context.</h2>
-              <div id="home-watch-content" class="watch-copy">
-                Source coverage and reporting definitions will appear here.
-              </div>
-              <p
-                id="home-review-notice"
-                class="source-review-notice hidden"
+              <div
+                id="pipeline-progress"
+                class="pipeline-progress hidden"
                 role="status"
               >
-                Some figures need checking before sharing. Open Source notes to
-                review them.
-              </p>
-              <details class="full-analysis">
-                <summary>Source notes</summary>
-                <p id="analysis-data-time" class="small muted"></p>
-                <div
-                  id="home-analysis-quality"
-                  class="quality-box hidden"
-                ></div>
-                <div id="full-analysis-content" class="markdown"></div>
-              </details>
-            </aside>
+                <div class="pipeline-status">
+                  <span class="spinner"></span
+                  ><strong id="pipeline-label">Getting live sources</strong
+                  ><span id="pipeline-elapsed">0s elapsed</span
+                  ><button class="text-button" id="cancel-pipeline">
+                    Cancel
+                  </button>
+                </div>
+                <div class="pipeline-track" aria-hidden="true"></div>
+              </div>
+              <div
+                id="pipeline-error"
+                class="notice error hidden"
+                role="alert"
+              ></div>
+              <div class="hero-tags">
+                <span>Independent broker views</span
+                ><span>Traceable sources</span
+                ><span>Uncertainty made visible</span>
+              </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <span class="art-label">LONDON<br /><b>IN PERSPECTIVE.</b></span
+              ><svg viewBox="0 0 350 240" fill="none">
+                <path
+                  d="M5 217H345M18 194V160H46V194M32 160V139M56 217V117H96V217M62 117L76 91L90 117M76 91V68M102 217V72L145 31V217M113 82V196M126 69V196M139 56V196M153 217V114H187V217M160 126H180M160 140H180M160 154H180M160 168H180M199 217V83L225 47L250 83V217M212 96V201M226 84V201M239 96V201M262 217V130H299V217M270 144H291M270 158H291M270 172H291M309 217V165H332V217"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M1 231C50 211 90 249 139 231C190 213 228 246 278 231C300 224 321 226 350 233"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                /></svg
+              ><span class="art-foot">THE CITY · WEST END · BEYOND</span>
+            </div>
           </div>
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">MARKET AT A GLANCE</span>
+              <h2>Four readings to set the scene</h2>
+            </div>
+            <span class="muted small"
+              >A named source and period for every reading</span
+            >
+          </div>
+          <div id="kpi-grid" class="kpi-grid loading" aria-live="polite">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+          <div class="overview-grid">
+            <article class="panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">A COMPARABLE VIEW</span>
+                  <h2>One period. Different perspectives.</h2>
+                </div>
+                <a href="#metrics" class="text-button">Compare all ↗</a>
+              </div>
+              <div class="chart-context" id="mini-chart-context">
+                Central London · Vacancy rate
+              </div>
+              <div id="mini-chart" class="bar-chart skeleton-block"></div>
+              <p class="footnote">
+                Broker definitions can differ even within the same period.
+                Readings are shown independently, never averaged.
+              </p>
+            </article>
+            <article class="panel news-panel">
+              <div class="panel-heading">
+                <div>
+                  <span class="eyebrow">IN THE MARKET</span>
+                  <h2>Stories shaping the market</h2>
+                </div>
+                <span class="tiny-tag" id="news-count">—</span>
+              </div>
+              <div id="news-list" class="news-list skeleton-block"></div>
+              <button id="more-news" class="more-button">
+                More market stories <span>↓</span>
+              </button>
+              <p class="footnote">
+                Headlines only. Read the original reporting for transaction
+                details.
+              </p>
+            </article>
+          </div>
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">THE MACRO BACKDROP</span>
+              <h2>The bigger economic picture</h2>
+            </div>
+            <span class="muted small"
+              >Current readings and change from the prior observation</span
+            >
+          </div>
+          <div id="macro-grid" class="macro-grid"></div>
+          <section class="brief-callout">
+            <div class="callout-icon" data-icon="document"></div>
+            <div>
+              <span class="eyebrow">FROM EVIDENCE TO A BRIEF</span>
+              <h2>Bring the evidence to your next conversation.</h2>
+              <p>
+                Market readings, broker differences and macro context, with a
+                full source register.
+              </p>
+            </div>
+            <a class="button dark" href="#brief"
+              >Create a brief <span>↗</span></a
+            >
+          </section>
         </section>
 
         <section id="view-ask" class="view hidden" aria-labelledby="ask-title">
@@ -363,50 +388,6 @@
               to review its scope.
             </p>
           </div>
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">MARKET AT A GLANCE</span>
-              <h2>Selected market readings</h2>
-            </div>
-            <span class="muted small"
-              >A named source and period for every reading</span
-            >
-          </div>
-          <div id="kpi-grid" class="kpi-grid loading" aria-live="polite">
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-          </div>
-          <section class="panel news-panel evidence-news">
-            <div class="panel-heading">
-              <div>
-                <span class="eyebrow">IN THE MARKET</span>
-                <h2>Stories shaping the market</h2>
-              </div>
-              <span class="tiny-tag" id="news-count">—</span>
-            </div>
-            <div id="news-list" class="news-list skeleton-block"></div>
-            <button id="more-news" class="more-button">
-              More market stories <span>↓</span>
-            </button>
-            <p class="footnote">
-              Headlines only. Read the original reporting for transaction
-              details.
-            </p>
-          </section>
-
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">THE MACRO BACKDROP</span>
-              <h2>The bigger economic picture</h2>
-            </div>
-            <span class="muted small"
-              >Current readings and change from the prior observation</span
-            >
-          </div>
-          <div id="macro-grid" class="macro-grid"></div>
-
           <section class="panel changes-panel">
             <div class="panel-heading">
               <div>
