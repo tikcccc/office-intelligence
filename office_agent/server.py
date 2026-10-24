@@ -16,7 +16,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from . import config, references, runlog, runtime, web
 from .agent import Agent
-from .dashboard import build_dashboard
+from .dashboard import build_dashboard, select_cards
 from .models import llm
 from .security import safe_text
 from .skills.weekly_brief import generate_weekly_brief
@@ -127,7 +127,7 @@ class DashboardApp:
         saved = self.workspace.read()
         with runtime.scope(runtime.RunContext(time.monotonic()+10,live_only=True)):
             data = saved["data"] or empty_dashboard()
-        return {**data,"workspace":{"has_data":has_data(data),"analysis":saved["analysis"],
+        return {**data,"cards":select_cards(data.get("rows",[]),data.get("macro",{}),data.get("sources",[])),"workspace":{"has_data":has_data(data),"analysis":saved["analysis"],
                 "history":saved["history"],"activity":self.public_job(self.refresh_job) if self.refresh_job else None}}
 
     def start_refresh(self, session: Session, *, automatic: bool = False, analysis_only: bool = False) -> dict:

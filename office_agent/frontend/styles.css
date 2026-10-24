@@ -2215,6 +2215,12 @@ main {
 .kpi-card {
   cursor: default;
 }
+.kpi-coverage {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.7;
+  margin: 10px 0 0;
+}
 .news-meta {
   display: flex;
   justify-content: space-between;

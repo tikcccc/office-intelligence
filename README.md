@@ -53,6 +53,9 @@ AI and broker extraction are shown as unavailable. To disable model calls explic
 The overview uses a single **Run AI analysis** control to refresh live sources before analysis.
 Progress appears while running; the completed result opens in a side panel with its sources and checks.
 Retrieval and analysis times are shown in HKT. A failed source is not filled with sample data.
+Overview cards use the available measure with an explicit label: Grade A vacancy is not all-grade vacancy,
+and average achieved Grade A rent is not prime headline rent. If only the narrower measure is available,
+the card identifies it and explains the coverage gap. Charts do not combine different reporting periods.
 
 | Environment variable | Purpose |
 | --- | --- |

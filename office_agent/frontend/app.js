@@ -352,6 +352,22 @@ function bars(target, rows) {
     root.append(line);
   }
 }
+function periodEndKey(period) {
+  const year = Number(period.slice(0, 4));
+  const quarter = period.match(/-Q([1-4])$/);
+  const half = period.match(/-H([12])$/);
+  const month = period.match(/-(\d{2})$/);
+  return (
+    year * 12 +
+    (quarter
+      ? Number(quarter[1]) * 3
+      : half
+        ? Number(half[1]) * 6
+        : month
+          ? Number(month[1])
+          : 12)
+  );
+}
 function bestPeriod(rows) {
   const counts = new Map();
   for (const r of rows) {
@@ -360,7 +376,10 @@ function bestPeriod(rows) {
   }
   return (
     [...counts.keys()].sort(
-      (a, b) => counts.get(b).size - counts.get(a).size || b.localeCompare(a),
+      (a, b) =>
+        counts.get(b).size - counts.get(a).size ||
+        periodEndKey(b) - periodEndKey(a) ||
+        b.localeCompare(a),
     )[0] || ""
   );
 }
@@ -381,6 +400,8 @@ function renderOverview() {
         sourceButton(card.reading),
       );
     }
+    if (card.coverage_note)
+      el.append(node("p", card.coverage_note, "kpi-coverage"));
     grid.append(el);
   });
   const rows = d.rows.filter(
@@ -389,10 +410,26 @@ function renderOverview() {
     period = bestPeriod(rows);
   $("mini-chart-context").textContent =
     `Central London · Vacancy / availability (all grades) · ${period || "No period"}`;
-  bars(
-    "mini-chart",
-    rows.filter((r) => r.period === period),
-  );
+  const comparable = rows.filter((r) => r.period === period);
+  const publishers = new Set(comparable.map((r) => r.publisher)).size;
+  $("mini-chart-title").textContent =
+    publishers > 1
+      ? "One period. Different perspectives."
+      : publishers === 1
+        ? "One broker reading for this period"
+        : "Vacancy coverage unavailable";
+  $("mini-chart-note").textContent =
+    publishers > 1
+      ? "Broker definitions can differ even within the same period. Readings are shown independently, never averaged."
+      : publishers === 1
+        ? "Only one broker has a reading for this period. Other reporting periods are kept separate in Market evidence."
+        : "No verified vacancy readings are available in the retrieved sources.";
+  const brokerStatus = d.source_status?.find((s) => s.id === "brokers");
+  $("market-coverage").textContent =
+    brokerStatus && brokerStatus.status !== "done"
+      ? "Some broker reports could not be refreshed. Each reading keeps its original source and reporting period; open a source to check when it was retrieved."
+      : "Cards show the available measures exactly as labelled. Grade A and all-grade vacancy, and average and prime rents, are different measures.";
+  bars("mini-chart", comparable);
   renderNews();
   const macro = clear("macro-grid");
   if (!d.macro.indicators.length)
