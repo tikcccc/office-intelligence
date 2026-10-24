@@ -5,6 +5,9 @@ COPY requirements.lock requirements-server.txt ./
 RUN pip install --no-cache-dir -r requirements-server.txt \
     && useradd --uid 10001 --create-home office \
     && mkdir -p /app/data /app/output && chown -R office:office /app
+# Coolify's managed health check probes with curl (the image also has a Python check).
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 COPY --chown=office:office office_agent ./office_agent
 COPY --chown=office:office gunicorn.conf.py ./
 USER office
