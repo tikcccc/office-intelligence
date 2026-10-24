@@ -343,10 +343,10 @@
         >
           <div class="page-intro">
             <span class="eyebrow">MARKET EVIDENCE</span>
-            <h1 id="metrics-title">Put the differences in perspective.</h1>
+            <h1 id="metrics-title">See what each source supports.</h1>
             <p>
-              Choose a common metric and period, then explore the differences in
-              broker definitions.
+              Explore broker readings by metric, market and period. Compare
+              sources where reporting periods overlap.
             </p>
           </div>
           <div class="panel">
@@ -359,13 +359,25 @@
                 Reset filters
               </button>
             </div>
+            <div
+              class="evidence-coverage"
+              aria-label="Available reporting periods"
+            >
+              <span class="eyebrow">AVAILABLE REPORTING PERIODS</span>
+              <div id="evidence-periods" class="evidence-periods"></div>
+            </div>
             <div class="comparison-heading">
               <div>
                 <h2 id="comparison-title">Vacancy rate comparison</h2>
                 <p id="comparison-subtitle" class="muted"></p>
               </div>
-              <span class="pill quiet">Independent readings · No averages</span>
+              <span id="comparison-status" class="pill quiet"></span>
             </div>
+            <p
+              id="comparison-context"
+              class="evidence-context"
+              role="status"
+            ></p>
             <div id="comparison-chart" class="bar-chart large-chart"></div>
             <div class="table-scroll">
               <table class="metrics-table">
@@ -386,24 +398,19 @@
               period.
             </div>
             <p class="footnote table-footnote">
-              Only the selected period is charted. Vacancy, availability, Grade
-              A and all-grade figures have different definitions. Open a source
-              to review its scope.
+              Each reading retains its source definition. Vacancy, availability,
+              Grade A and all-grade measures are distinct. Readings are never
+              averaged.
             </p>
           </div>
-          <section class="panel changes-panel">
-            <div class="panel-heading">
-              <div>
-                <span class="eyebrow">WHAT CHANGED</span>
-                <h2>What changed within each broker’s view?</h2>
-              </div>
-            </div>
+          <details id="changes-panel" class="panel changes-panel">
+            <summary id="changes-title">Why no period change is shown</summary>
             <div id="changes-list" class="changes-list"></div>
             <p class="footnote">
               Changes require a consistent publisher, metric and definition.
               Year-to-date totals are not directly compared.
             </p>
-          </section>
+          </details>
         </section>
 
         <section

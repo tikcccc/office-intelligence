@@ -562,24 +562,87 @@ function updatePeriods() {
   const rows = selectedRows();
   options(
     "period-filter",
-    [...new Set(rows.map((r) => r.period))]
-      .sort()
-      .reverse()
-      .map((k) => [k, k]),
+    evidencePeriods(rows).map((group) => [group.period, group.label]),
     bestPeriod(rows),
   );
   renderMetrics();
 }
-function renderMetrics() {
-  const rows = selectedRows().filter(
-    (r) => r.period === $("period-filter").value,
+function evidencePeriods(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    if (!groups.has(row.period))
+      groups.set(row.period, {
+        period: row.period,
+        label: row.period_label || row.period,
+        publishers: new Set(),
+      });
+    groups.get(row.period).publishers.add(row.publisher);
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      periodEndKey(b.period) - periodEndKey(a.period) ||
+      b.period.localeCompare(a.period),
   );
+}
+function changesForSelection(changes, rows) {
+  return changes.filter((change) =>
+    rows.some(
+      (row) =>
+        change.metric === row.metric &&
+        change.submarket === row.submarket &&
+        change.publisher === row.publisher &&
+        (change.to_period
+          ? change.to_period === row.period
+          : typeof change.to === "string" &&
+            change.to.endsWith(`(${row.period_label || row.period})`)),
+    ),
+  );
+}
+function renderMetrics() {
+  const available = selectedRows();
+  const rows = available.filter((r) => r.period === $("period-filter").value);
+  const publishers = [...new Set(rows.map((row) => row.publisher))];
+  const periods = clear("evidence-periods");
+  for (const group of evidencePeriods(available)) {
+    const button = node(
+      "button",
+      `${group.label} · ${[...group.publishers].join(", ")}`,
+      "evidence-period",
+    );
+    button.type = "button";
+    button.setAttribute(
+      "aria-pressed",
+      String(group.period === $("period-filter").value),
+    );
+    button.addEventListener("click", () => {
+      $("period-filter").value = group.period;
+      renderMetrics();
+    });
+    periods.append(button);
+  }
+  if (!available.length)
+    periods.append(node("p", "No reporting periods retrieved yet.", "muted"));
   $("comparison-title").textContent =
     names[$("metric-filter").value] || "Broker comparison";
   $("comparison-subtitle").textContent = rows.length
-    ? `${markets[$("market-filter").value] || $("market-filter").value} · ${$("period-filter").value} · ${rows.length} independent ${rows.length === 1 ? "reading" : "readings"}`
+    ? `${markets[$("market-filter").value] || $("market-filter").value} · ${rows[0].period_label || rows[0].period} · ${rows.length} ${rows.length === 1 ? "reading" : "readings"}`
     : "No retrieved broker readings for this selection. Run a live update from the overview.";
+  $("comparison-status").textContent =
+    publishers.length > 1
+      ? `${publishers.length} sources · Check definitions`
+      : publishers.length
+        ? "Single-source reading"
+        : "Awaiting source data";
+  const otherPublishers = [
+    ...new Set(available.map((row) => row.publisher)),
+  ].filter((publisher) => !publishers.includes(publisher));
+  $("comparison-context").textContent = !rows.length
+    ? "A reading will appear after a source is retrieved for this selection."
+    : publishers.length > 1
+      ? "These sources cover the same reporting period. Check their definitions before interpreting any difference."
+      : `Only ${publishers[0]} has a retrieved reading for this period. ${otherPublishers.length ? `${otherPublishers.join(", ")} report in other periods; select one above to view it. These are not a period-over-period comparison.` : "A comparison needs another publisher covering the same metric, market and period."}`;
   bars("comparison-chart", rows);
+  hide("comparison-chart", publishers.length < 2);
   const body = clear("metrics-table-body");
   for (const row of rows) {
     const tr = node("tr");
@@ -602,11 +665,11 @@ function renderMetrics() {
   }
   hide("metrics-empty", rows.length > 0);
   const changes = clear("changes-list");
-  const list = (state.data.changes || []).filter(
-    (r) =>
-      r.metric === $("metric-filter").value &&
-      r.submarket === $("market-filter").value,
-  );
+  const list = changesForSelection(state.data.changes || [], rows);
+  $("changes-panel").open = list.length > 0;
+  $("changes-title").textContent = list.length
+    ? "Period changes within each source"
+    : "Why no period change is shown";
   for (const change of list) {
     const el = node("div", null, "change-item");
     el.append(
@@ -624,8 +687,8 @@ function renderMetrics() {
     changes.append(
       node(
         "p",
-        "No comparable prior-period readings from the same broker for this selection.",
-        "empty-state compact",
+        "The retrieved evidence has no compatible earlier reading from the same publisher for the selected period. A reading from another publisher or a different reporting frequency cannot establish a change.",
+        "evidence-context",
       ),
     );
 }

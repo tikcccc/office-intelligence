@@ -308,6 +308,7 @@ def _period_changes(grouped: dict) -> list[dict]:
                 rel = f", {delta / prev['value'] * 100:+.0f}%" if prev["value"] and cur["unit"] != "%" else ""
                 changes.append({
                     "metric": m, "submarket": sub, "publisher": pub,
+                    "from_period": prev["period"], "to_period": cur["period"],
                     "from": f'{fmt_value(prev["value"], prev["unit"])} ({prev["period_label"]})',
                     "to": f'{fmt_value(cur["value"], cur["unit"])} ({cur["period_label"]})',
                     "change": (f"{delta:+.1f} pts" if cur["unit"] == "%"

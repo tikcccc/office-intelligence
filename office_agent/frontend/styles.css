@@ -1161,6 +1161,41 @@ main {
   align-items: center;
   margin: 24px 0;
 }
+.evidence-coverage {
+  margin-top: 24px;
+}
+.evidence-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.evidence-period {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.evidence-period[aria-pressed="true"] {
+  color: var(--ink);
+  background: #edf4ef;
+  border-color: #9cb6aa;
+}
+.evidence-period:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.evidence-context {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+  max-width: 780px;
+}
 .comparison-heading h2 {
   margin: 0;
   font-size: 20px;
@@ -1229,6 +1264,14 @@ main {
 }
 .changes-panel {
   margin-top: 22px;
+}
+.changes-panel > summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.changes-panel[open] > summary {
+  margin-bottom: 20px;
 }
 .changes-list {
   display: grid;
